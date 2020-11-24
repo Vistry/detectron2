@@ -26,6 +26,12 @@ to see more demos and learn about detectron2.
 
 See [INSTALL.md](INSTALL.md).
 
+## Demo
+Launch the container and run
+~~~
+python demo.py --config-file ../configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --video-input ../../rsc/2020-11-22-20h05m07s-10.131.9.212-camera.mp4 --output ../../rsc/vis/ --confidence-threshold 0.7 --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl
+~~~
+
 ## Quick Start
 
 See [GETTING_STARTED.md](GETTING_STARTED.md),
