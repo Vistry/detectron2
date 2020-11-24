@@ -27,6 +27,8 @@ class VisualizationDemo(object):
         self.cpu_device = torch.device("cpu")
         self.instance_mode = instance_mode
 
+        self.video_metadata = list()
+
         self.parallel = parallel
         if parallel:
             num_gpu = torch.cuda.device_count()
@@ -95,6 +97,12 @@ class VisualizationDemo(object):
                 )
             elif "instances" in predictions:
                 predictions = predictions["instances"].to(self.cpu_device)
+                self.video_metadata.append(predictions)
+                #print(len(self.video_metadata))
+                #print('Len', len(predictions))
+                #print('Boxes', predictions.pred_boxes.tensor.numpy() if predictions.has("pred_boxes") else None)
+                #print('Scores', predictions.scores.numpy() if predictions.has("scores") else None)
+                #print('Classes', predictions.pred_classes.numpy() if predictions.has("pred_classes") else None)
                 vis_frame = video_visualizer.draw_instance_predictions(frame, predictions)
             elif "sem_seg" in predictions:
                 vis_frame = video_visualizer.draw_sem_seg(

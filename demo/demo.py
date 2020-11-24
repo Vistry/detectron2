@@ -1,4 +1,4 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+# Copyright (c) Facebook Inc. and its affiliates.
 import argparse
 import glob
 import multiprocessing as mp
@@ -6,7 +6,7 @@ import os
 import time
 import cv2
 import tqdm
-
+import pickle 
 from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
 from detectron2.utils.logger import setup_logger
@@ -15,7 +15,6 @@ from predictor import VisualizationDemo
 
 # constants
 WINDOW_NAME = "COCO detections"
-
 
 def setup_cfg(args):
     # load config from file and command-line arguments
@@ -131,6 +130,8 @@ if __name__ == "__main__":
         frames_per_second = video.get(cv2.CAP_PROP_FPS)
         num_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
         basename = os.path.basename(args.video_input)
+        #"pred_boxes", "pred_classes", "scores", "pred_masks" (or "pred_masks_rle").
+        observations = [{"pred_boxes":[], "pred_classes":[], "scores":[], "pred_masks":[]} for i in range(num_frames)]
 
         if args.output:
             if os.path.isdir(args.output):
@@ -149,7 +150,26 @@ if __name__ == "__main__":
                 isColor=True,
             )
         assert os.path.isfile(args.video_input)
-        for vis_frame in tqdm.tqdm(demo.run_on_video(video), total=num_frames):
+        for vis_frameid, vis_frame in enumerate(tqdm.tqdm(demo.run_on_video(video), total=num_frames)):
+            #print(len(demo.video_metadata))
+            predictions = demo.video_metadata[-1]
+            #print('Boxes', predictions.pred_boxes.tensor.numpy() if predictions.has("pred_boxes") else None)
+            #print('Scores', predictions.scores.numpy() if predictions.has("scores") else None)
+            #print('Classes', predictions.pred_classes.numpy() if predictions.has("pred_classes") else None$
+            # "pred_boxes", "pred_classes", "scores", "pred_masks" (or "pred_masks_rle").
+            #if predictions.has("pred_masks"):
+            #masks = predictions.pred_masks[ids]
+            # mask IOU is not yet enabled
+            # masks_rles = mask_util.encode(np.asarray(masks.permute(1, 2, 0), order="F"))
+            # assert len(masks_rles) == num_instances
+            #else:
+            #masks = None
+
+            observations[vis_frameid]['pred_boxes'].append(predictions.pred_boxes.tensor.numpy() if predictions.has("pred_boxes") else None)
+            observations[vis_frameid]['scores'].append(predictions.scores.numpy() if predictions.has("scores") else None)
+            observations[vis_frameid]['pred_classes'].append(predictions.pred_classes.numpy() if predictions.has("pred_classes") else None)
+            #observations[vis_frameid]['pred_masks'].append(predictions.pred_masks.numpy() if predictions.has("pred_masks") else None)
+
             if args.output:
                 output_file.write(vis_frame)
             else:
@@ -157,6 +177,11 @@ if __name__ == "__main__":
                 cv2.imshow(basename, vis_frame)
                 if cv2.waitKey(1) == 27:
                     break  # esc to quit
+        
+        with open('observations.pkl', 'wb') as output:
+        # Pickle dictionary using protocol 0.
+            pickle.dump(observations, output)
+
         video.release()
         if args.output:
             output_file.release()

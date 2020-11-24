@@ -73,21 +73,38 @@ class VideoVisualizer:
         classes = predictions.pred_classes.numpy() if predictions.has("pred_classes") else None
         keypoints = predictions.pred_keypoints if predictions.has("pred_keypoints") else None
 
+        new_classes=[]
+        new_scores=[]
+        ids=[]
+        need_set=[0]
+        for i,x in enumerate(classes):
+            if int(x) in need_set:
+                new_classes.append(int(x))
+                new_scores.append(scores[i])
+                ids.append(i)
+
+        boxes=boxes[ids] if boxes is not None else None
+        labels = _create_text_labels(new_classes, new_scores, self.metadata.get("thing_classes", None))
+
         if predictions.has("pred_masks"):
-            masks = predictions.pred_masks
+            masks = predictions.pred_masks[ids]
             # mask IOU is not yet enabled
             # masks_rles = mask_util.encode(np.asarray(masks.permute(1, 2, 0), order="F"))
             # assert len(masks_rles) == num_instances
         else:
             masks = None
 
-        detected = [
-            _DetectedInstance(classes[i], boxes[i], mask_rle=None, color=None, ttl=8)
-            for i in range(num_instances)
-        ]
-        colors = self._assign_colors(detected)
+        if len(ids) > 0:
+            detected = [
+                _DetectedInstance(new_classes[i], boxes[i], mask_rle=None, color=None, ttl=8)
+                for i in range(len(ids))
+            ]
+            colors = self._assign_colors(detected)
+        else:
+            detected = None
+            colors = None
 
-        labels = _create_text_labels(classes, scores, self.metadata.get("thing_classes", None))
+        #labels = _create_text_labels(classes, scores, self.metadata.get("thing_classes", None))
 
         if self._instance_mode == ColorMode.IMAGE_BW:
             # any() returns uint8 tensor
@@ -195,12 +212,12 @@ class VideoVisualizer:
             rles_old = [x.mask_rle for x in self._old_instances]
             rles_new = [x.mask_rle for x in instances]
             ious = mask_util.iou(rles_old, rles_new, is_crowd)
-            threshold = 0.5
+            threshold = 0.3
         else:
             boxes_old = [x.bbox for x in self._old_instances]
             boxes_new = [x.bbox for x in instances]
             ious = mask_util.iou(boxes_old, boxes_new, is_crowd)
-            threshold = 0.6
+            threshold = 0.3
         if len(ious) == 0:
             ious = np.zeros((len(self._old_instances), len(instances)), dtype="float32")
 

@@ -16,7 +16,7 @@ from PIL import Image
 from detectron2.data import MetadataCatalog
 from detectron2.structures import BitMasks, Boxes, BoxMode, Keypoints, PolygonMasks, RotatedBoxes
 from detectron2.utils.file_io import PathManager
-
+from time import sleep
 from .colormap import random_color
 
 logger = logging.getLogger(__name__)
@@ -369,7 +369,7 @@ class Visualizer:
             output (VisImage): image object with visualizations.
         """
         boxes = predictions.pred_boxes if predictions.has("pred_boxes") else None
-        scores = predictions.scores if predictions.has("scores") else None
+        scores =predictions.scores if predictions.has("scores") else None
         classes = predictions.pred_classes if predictions.has("pred_classes") else None
         labels = _create_text_labels(classes, scores, self.metadata.get("thing_classes", None))
         keypoints = predictions.pred_keypoints if predictions.has("pred_keypoints") else None
@@ -379,6 +379,7 @@ class Visualizer:
             masks = [GenericMask(x, self.output.height, self.output.width) for x in masks]
         else:
             masks = None
+
 
         if self._instance_mode == ColorMode.SEGMENTATION and self.metadata.get("thing_colors"):
             colors = [
