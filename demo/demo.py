@@ -136,7 +136,10 @@ if __name__ == "__main__":
         if args.output:
             if os.path.isdir(args.output):
                 output_fname = os.path.join(args.output, basename)
-                output_fname = os.path.splitext(output_fname)[0] + ".mkv"
+                #output_fname_obs = os.path.join(args.output, basename)
+                output_fname = os.path.splitext(output_fname)[0] + "_ANN.mkv"
+                output_fname_obs = os.path.join(args.output, basename)
+                output_fname_obs = os.path.splitext(output_fname_obs)[0] + '_OBS.pkl'
             else:
                 output_fname = args.output
             assert not os.path.isfile(output_fname), output_fname
@@ -152,7 +155,7 @@ if __name__ == "__main__":
         assert os.path.isfile(args.video_input)
         for vis_frameid, vis_frame in enumerate(tqdm.tqdm(demo.run_on_video(video), total=num_frames)):
             #print(len(demo.video_metadata))
-            predictions = demo.video_metadata[-1]
+            predictions = demo.video_metadata
             #print('Boxes', predictions.pred_boxes.tensor.numpy() if predictions.has("pred_boxes") else None)
             #print('Scores', predictions.scores.numpy() if predictions.has("scores") else None)
             #print('Classes', predictions.pred_classes.numpy() if predictions.has("pred_classes") else None$
@@ -177,10 +180,11 @@ if __name__ == "__main__":
                 cv2.imshow(basename, vis_frame)
                 if cv2.waitKey(1) == 27:
                     break  # esc to quit
-        
-        with open('observations.pkl', 'wb') as output:
-        # Pickle dictionary using protocol 0.
-            pickle.dump(observations, output)
+
+        if args.output:
+            with open(output_fname_obs, 'wb') as output:
+            # Pickle dictionary using protocol 0.
+                pickle.dump(observations, output)
 
         video.release()
         if args.output:

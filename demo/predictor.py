@@ -97,7 +97,7 @@ class VisualizationDemo(object):
                 )
             elif "instances" in predictions:
                 predictions = predictions["instances"].to(self.cpu_device)
-                self.video_metadata.append(predictions)
+                self.video_metadata = predictions
                 #print(len(self.video_metadata))
                 #print('Len', len(predictions))
                 #print('Boxes', predictions.pred_boxes.tensor.numpy() if predictions.has("pred_boxes") else None)
